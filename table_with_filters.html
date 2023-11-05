@@ -1,11 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-<head>
-    <style>
+<style>
         table {
             border-collapse: collapse;
-            width: 80%;
+            width: 80vw;
         }
         
         th, td {
@@ -19,6 +17,14 @@
             cursor: pointer;
         }
 
+        tr:nth-child(odd) {
+            background-color: #EAEAEA;
+        }
+
+        tr:nth-child(even) {
+            background-color: #FFFFFF;
+        }
+
         tr:hover {
             background-color: #DEE9D9;
         }
@@ -28,58 +34,56 @@
             border: 1px solid #ccc;
             border-radius: 7px;
         }
-    </style>
-</head>
 
-<body ng-app="myApp" ng-controller="myCtrl">
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<body>
+
+<div ng-app="myApp" ng-controller="myCtrl"> 
 
 <table>
     <tr>
-        <th ng-click="orderByMe('dish')">Dish</th>
-        <th ng-click="orderByMe('country')">Country</th>
-        <th ng-click="orderByMe('cost')">Cost</th>
+        <td ng-click="changeSortingOrder('name.common')">NameCommon</td>
+        <td ng-click="changeSortingOrder('capital')">Capital</td>
     </tr>
     <tr>
-        <td><input ng-model="filterDish"></td>
-        <td><input ng-model="filterCountry"></td>
-        <td><input ng-model="filterCost"></td>
+        <td>
+            <input ng-model="filterNameCommon"/>
+        </td>
+        <td>
+            <input ng-model="filterCapital"/>
+        </td>
     </tr>
-    <tr ng-repeat="record in table | filter:{dish: filterDish, country: filterCountry, cost: filterCost} | orderBy:mySortOrder">
-        <td>{{record.dish}}</td>
-        <td>{{record.country}}</td>
-        <td>{{record.cost}}</td>
+    <tr ng-repeat="record in table | orderBy: mySortingOrder | filter: customFilter ">
+        <td>{{record.name.common}}</td>
+        <td>{{record.capital[0]}}</td>
     </tr>
 </table>
 
+</div>
+
 <script>
-angular.module("myApp", []).controller("myCtrl", function($scope) {
-    $scope.mySortOrder = null;
-    $scope.orderByMe = function(columnLabel) {
-        $scope.mySortOrder = columnLabel;
-    };
-    $scope.table = [
-					{dish: "Kapusniak", country: "Poland", cost: 45},
-					{dish: "Bouillabaisse", country: "France", cost: 80},
-					{dish: "Paella Valenciana", country: "Spain", cost: 75},
-					{dish: "Wiener Schnitzel", country: "Austria", cost: 70},
-					{dish: "Fish and Chips", country: "United Kingdom", cost: 50},
-					{dish: "Spaghetti Carbonara", country: "Italy", cost: 65},
-					{dish: "Goulash", country: "Hungary", cost: 55},
-					{dish: "Moules-frites", country: "Belgium", cost: 48},
-					{dish: "Borscht", country: "Ukraine", cost: 40},
-					{dish: "Kottbullar", country: "Sweden", cost: 58},
-					{dish: "Cabbage Rolls", country: "Romania", cost: 53},
-					{dish: "Portuguese Bacalhau", country: "Portugal", cost: 67},
-					{dish: "Pierogi", country: "Poland", cost: 46},
-					{dish: "Frikandel", country: "Netherlands", cost: 42},
-					{dish: "Bratwurst", country: "Germany", cost: 52},
-					{dish: "Rakfisk", country: "Norway", cost: 77},
-					{dish: "Potato Pancakes", country: "Belarus", cost: 38},
-					{dish: "Pastitsio", country: "Greece", cost: 60},
-					{dish: "Sarmale", country: "Moldova", cost: 44},
-					{dish: "Lahmacun", country: "Turkey", cost: 54}
-    ];
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http) {
+$scope.customFilter = function(record) {
+    return (
+        (!$scope.filterNameCommon || record.name.common.includes($scope.filterNameCommon)) &&
+        (!$scope.filterCapital || (record.capital && record.capital.some(function(cap) {
+            return (cap.includes($scope.filterCapital))
+        })))
+    );
+};
+	$scope.filterNameCommon = "";
+    $scope.filterCapital = "";
+	$scope.mySortingOrder = "";
+    $scope.changeSortingOrder = function(x) {
+        $scope.mySortingOrder = x;
+    }
+    $http.get('https://restcountries.com/v3.1/all').then(function(response) {
+        $scope.table = response.data;
+    });
 });
 </script>
+
 </body>
 </html>
